@@ -345,18 +345,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <?php if ($occ): ?>
 
         <!-- LIVE OCCUPANCY TIMER -->
-        <div class="tc-timer">
+        <!-- <div class="tc-timer">
           <span>⏱️</span>
           <span class="tc-timer-label">Occupied for</span>
           <span class="tc-timer-val" id="tmr-<?php echo $row['id']; ?>" data-secs="<?php echo $elapsed; ?>">
             <?php
-              $h = floor($elapsed/3600); $m = floor(($elapsed%3600)/60); $s = $elapsed%60;
-              if ($h>0)     echo "{$h}h ".sprintf('%02d',$m)."m";
-              elseif ($m>0) echo "{$m}m ".sprintf('%02d',$s)."s";
-              else          echo "{$s}s";
+              // $h = floor($elapsed/3600); $m = floor(($elapsed%3600)/60); $s = $elapsed%60;
+              // if ($h>0)     echo "{$h}h ".sprintf('%02d',$m)."m";
+              // elseif ($m>0) echo "{$m}m ".sprintf('%02d',$s)."s";
+              // else          echo "{$s}s";
             ?>
           </span>
-        </div>
+        </div> -->
 
         <?php if ($pending > 0): ?>
         <!-- PENDING BILL TOTAL -->
