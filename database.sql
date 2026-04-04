@@ -70,3 +70,5 @@ CREATE TABLE payments (
     status ENUM('pending','paid') DEFAULT 'paid',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE users 
+ADD COLUMN status ENUM('active','inactive') DEFAULT 'active';

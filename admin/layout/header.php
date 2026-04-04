@@ -367,6 +367,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <div class="profile-box">
             <h4><?php echo $_SESSION['user_name']; ?></h4>
             <p><?php echo ucfirst($_SESSION['user_role']); ?> Panel</p>
+            // Restrict only admin
+<?php if ($_SESSION['user_role'] != 'admin') {
+    header("Location: ../pos/index.php");
+    exit();
+} ?>
         </div>
 
         <div class="menu">
@@ -374,6 +379,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <a href="products.php" class="<?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">🍔 Products</a>
             <a href="tables.php" class="<?php echo ($current_page == 'tables.php') ? 'active' : ''; ?>">🪑 Tables</a>
             <a href="payments.php" class="<?php echo ($current_page == 'payments.php') ? 'active' : ''; ?>">💳 Payments</a>
+            <a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>">👥 Users</a>
         </div>
     </div>
 
