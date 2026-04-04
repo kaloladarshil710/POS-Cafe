@@ -1,51 +1,49 @@
 <?php
-session_start();
+include("../config/db.php");
+include("layout/header.php");
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: auth/login.php");
-    exit();
-}
+$product_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM products"))['total'];
+$table_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM restaurant_tables"))['total'];
+$payment_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM payment_methods WHERE is_enabled='yes'"))['total'];
+$user_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM users"))['total'];
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard - POS Cafe</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #eef2f3;
-            text-align: center;
-            padding-top: 100px;
-        }
-        .box {
-            background: white;
-            width: 500px;
-            margin: auto;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 0 15px #ccc;
-        }
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
-            background: red;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-        }
-    </style>
-</head>
-<body>
-
-<div class="box">
-    <h1>Welcome, <?php echo $_SESSION['user_name']; ?> 👋</h1>
-    <h3>Role: <?php echo $_SESSION['user_role']; ?></h3>
-    <p>You are successfully logged into POS Cafe System.</p>
-
-    <a href="auth/logout.php">Logout</a>
+<div class="card-grid">
+    <div class="card">
+        <h3>Total Products</h3>
+        <p><?php echo $product_count; ?></p>
+    </div>
+    <div class="card">
+        <h3>Total Tables</h3>
+        <p><?php echo $table_count; ?></p>
+    </div>
+    <div class="card">
+        <h3>Active Payments</h3>
+        <p><?php echo $payment_count; ?></p>
+    </div>
+    <div class="card">
+        <h3>Total Users</h3>
+        <p><?php echo $user_count; ?></p>
+    </div>
 </div>
 
-</body>
-</html>
+<div class="panel">
+    <h3>Welcome to POS Cafe Admin</h3>
+    <p style="line-height:1.9; color:#475569; font-size:15px;">
+        This backend panel is where you manage your restaurant POS system.
+        From here you can add products, manage restaurant tables, configure payment methods,
+        and prepare your POS system for the frontend ordering screen.
+    </p>
+</div>
+
+<div class="panel">
+    <h3>Quick Setup Checklist</h3>
+    <div style="display:grid; gap:14px;">
+        <div style="padding:14px; background:#f8fafc; border-radius:14px;">✅ Add menu products</div>
+        <div style="padding:14px; background:#f8fafc; border-radius:14px;">✅ Create restaurant tables</div>
+        <div style="padding:14px; background:#f8fafc; border-radius:14px;">✅ Configure payment methods</div>
+        <div style="padding:14px; background:#f8fafc; border-radius:14px;">🔜 Next: Build POS ordering screen</div>
+    </div>
+</div>
+
+<?php include("layout/footer.php"); ?>
