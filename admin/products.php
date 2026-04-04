@@ -123,7 +123,7 @@ $products = mysqli_query($conn, "
             <tr>
                 <td><?php echo $row['id']; ?></td>
                 <td><?php echo htmlspecialchars($row['name']); ?></td>
-                <td><?php echo htmlspecialchars($row['category_name'] ?? $row['category']); ?></td>
+                <td><?php echo htmlspecialchars($row['category_name']); ?></td>
                 <td>₹<?php echo number_format($row['price'], 2); ?></td>
                 <td><?php echo htmlspecialchars($row['unit']); ?></td>
                 <td><?php echo $row['tax']; ?>%</td>
