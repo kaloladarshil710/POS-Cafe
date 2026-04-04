@@ -143,9 +143,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div class="logo">POS <span>Cafe</span> — Kitchen</div>
     <div class="live-badge"><div class="pulse-dot"></div>Live · Auto-refreshes</div>
   </div>
-  <div class="topbar-right">
-    <a class="t-btn-nav" href="../pos/index.php">🪑 POS Terminal</a>
-    <div class="topbar-right">
+ 
+<div class="topbar-right">
   <a class="t-btn-nav" href="../pos/index.php">🪑 POS Terminal</a>
 
   <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
@@ -153,7 +152,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <?php endif; ?>
 </div>
   </div>
-</div>
+ 
 
 <div class="refresh-bar">
   🕐 <?php echo date('D d M, h:i:s A'); ?> &nbsp;·&nbsp; Page refreshes every 15 seconds
