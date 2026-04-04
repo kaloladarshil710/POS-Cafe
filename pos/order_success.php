@@ -54,7 +54,7 @@ td{padding:12px;border-bottom:1px solid #F2F4F7;font-size:14px;}
   <div class="success-top">
     <div class="check-circle">✅</div>
     <h1>Order Placed!</h1>
-    <p>Your order is saved. Send it to the kitchen or take payment now.</p>
+    <p>Your order is saved. Send it to the kitchen now.</p>
   </div>
 
   <div class="info-grid">
@@ -81,7 +81,7 @@ td{padding:12px;border-bottom:1px solid #F2F4F7;font-size:14px;}
 
   <div class="actions">
     <a class="btn btn-amber" href="../kitchen/send_to_kitchen.php?order_id=<?php echo $order['id']; ?>">👨‍🍳 Send to Kitchen</a>
-    <a class="btn btn-primary" href="payment.php?order_id=<?php echo $order['id']; ?>">💳 Take Payment</a>
+
   </div>
   <div style="margin-top:12px;">
     <a class="btn btn-outline" href="index.php">← Back to Tables</a>
