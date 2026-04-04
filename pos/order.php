@@ -9,7 +9,10 @@ $table_q  = mysqli_query($conn, "SELECT * FROM restaurant_tables WHERE id=$table
 $table    = mysqli_fetch_assoc($table_q);
 if (!$table) { header("Location: index.php"); exit(); }
 
-$products = mysqli_query($conn, "SELECT * FROM products ORDER BY category ASC, name ASC");
+$products = mysqli_query($conn, "SELECT p.*, c.category_name
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id
+ORDER BY c.category_name ASC, p.name ASC");
 
 // Get categories for filter tabs
 $cats_q = mysqli_query($conn, "SELECT DISTINCT category FROM products ORDER BY category ASC");

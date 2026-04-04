@@ -521,6 +521,7 @@ $nav_items = [
             <a href="../pos/index.php" class="btn-pos">🚀 Open POS Terminal</a>
             <a href="../kitchen/kitchen.php" class="btn-kitchen">👨‍🍳 Kitchen Display</a>
             <a href="../auth/logout.php" class="btn-logout">🔓 Logout</a>
+            <a href="categories.php" class="<?php echo ($current_page == 'categories.php') ? 'active' : ''; ?>">📂 Categories</a>
         </div>
     </aside>
 

@@ -114,3 +114,11 @@ INSERT IGNORE INTO products (name, category, price, unit, tax, description) VALU
 ('Mineral Water', 'Beverages', 30.00, 'Bottle', 0.00, '1L mineral water bottle'),
 ('Chicken Burger', 'Burger', 189.00, 'Piece', 5.00, 'Grilled chicken burger'),
 ('Paneer Tikka', 'Starters', 220.00, 'Plate', 5.00, 'Tandoori paneer tikka with chutney');
+
+
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL UNIQUE,
+    status ENUM('active','inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
