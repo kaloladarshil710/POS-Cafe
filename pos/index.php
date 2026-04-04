@@ -215,8 +215,25 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .tc-free-btn:hover{background:var(--red);color:white;border-color:var(--red);}
 
 /* order count badge */
-.order-badge{position:absolute;top:12px;right:50px;background:var(--amber);color:#000;width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-
+.order-badge{
+  position:absolute;
+  top:12px;
+  right:22px;
+  transform:translateY(-8px);
+  background:var(--amber);
+  color:#000;
+  min-width:22px;
+  height:22px;
+  padding:0 6px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 10px rgba(245,158,11,0.35);
+  z-index:3;
+}
 .empty{text-align:center;padding:80px 20px;color:var(--text3);}
 
 /* MODAL */
