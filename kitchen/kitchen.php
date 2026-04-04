@@ -18,7 +18,7 @@ function renderTicket($conn,$order){
   $urgent=($mins>=10 && $status==='to_cook');
   $col_map=['to_cook'=>'col-cook','preparing'=>'col-prep','completed'=>'col-done'];
   ?>
-  <div class="ticket <?php echo $urgent?'urgent':''; ?>">
+<div class="ticket <?php echo $urgent?'urgent':''; ?>" data-table="<?php echo strtolower($order['table_number']); ?>">
     <div class="ticket-head">
       <div>
         <div class="ticket-num">#<?php echo htmlspecialchars($order['order_number']); ?></div>
@@ -43,14 +43,13 @@ function renderTicket($conn,$order){
 
     <div class="ticket-foot">
       <span class="ticket-total">₹<?php echo number_format($order['total_amount'],2); ?></span>
-      <?php if($status==='completed'): ?>
-        <a class="t-btn t-btn-pay" href="../pos/payment.php?order_id=<?php echo $oid; ?>">💳 Pay</a>
-        <span class="badge-ready">✅ Ready</span>
-      <?php else: ?>
-        <a class="t-btn t-btn-next" href="update_order_status.php?order_id=<?php echo $oid; ?>">
-          <?php echo $status==='to_cook'?'🍳 Start':'✅ Done'; ?>
-        </a>
-      <?php endif; ?>
+     <?php if($status==='completed'): ?>
+  <span class="badge-ready">✅ Ready</span>
+<?php else: ?>
+  <a class="t-btn t-btn-next" href="update_order_status.php?order_id=<?php echo $oid; ?>">
+    <?php echo $status==='to_cook'?'🍳 Start':'✅ Done'; ?>
+  </a>
+<?php endif; ?>
     </div>
   </div>
   <?php
@@ -85,7 +84,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .live-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);font-weight:700;}
 
 .refresh-bar{background:rgba(255,255,255,0.015);border-bottom:1px solid var(--border);padding:8px 24px;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.search-wrap{
+  padding:12px 24px;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,0.02);
+}
 
+.search-wrap input{
+  width:100%;
+  max-width:360px;
+  padding:12px 16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.05);
+  color:var(--text);
+  font-size:14px;
+  outline:none;
+}
+
+.search-wrap input::placeholder{
+  color:var(--text3);
+}
 /* columns */
 .board{display:grid;grid-template-columns:repeat(3,1fr);flex:1;gap:0;}
 .col{border-right:1px solid var(--border);padding:18px 16px;overflow-y:auto;min-height:0;}
@@ -154,8 +173,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
  
 
-<div class="refresh-bar">
-  🕐 <?php echo date('D d M, h:i:s A'); ?> &nbsp;·&nbsp; Page refreshes every 15 seconds
+<div class="search-wrap">
+  <input type="text" id="tableSearch" placeholder="🔍 Search by Table No (e.g. Table 3)" onkeyup="filterOrders()">
 </div>
 
 <div class="board">
@@ -192,6 +211,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <?php else: while($o=mysqli_fetch_assoc($completed_q)) renderTicket($conn,$o); endif; ?>
   </div>
 </div>
+<script>
+function filterOrders() {
+  let input = document.getElementById("tableSearch").value.toLowerCase();
+  let cards = document.querySelectorAll(".ticket");
 
+  cards.forEach(card => {
+    let table = card.getAttribute("data-table") || "";
+    if (table.includes(input)) {
+      card.style.display = "";
+    } else {
+      card.style.display = "none";
+    }
+  });
+}
+</script>
 </body>
 </html>

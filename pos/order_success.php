@@ -40,6 +40,7 @@ td{padding:12px;border-bottom:1px solid #F2F4F7;font-size:14px;}
 .total-row td{font-weight:800;font-size:15px;background:#FFF8F5;color:var(--primary);}
 
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.actions.single-action{grid-template-columns:1fr;}
 .btn{text-decoration:none;padding:14px 16px;border-radius:14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;transition:0.18s;border:none;cursor:pointer;}
 .btn-amber{background:linear-gradient(135deg,#F59E0B,#D97706);color:white;}
 .btn-amber:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,0.3);}
@@ -79,10 +80,9 @@ td{padding:12px;border-bottom:1px solid #F2F4F7;font-size:14px;}
     </tbody>
   </table>
 
-  <div class="actions">
-    <a class="btn btn-amber" href="../kitchen/send_to_kitchen.php?order_id=<?php echo $order['id']; ?>">👨‍🍳 Send to Kitchen</a>
-
-  </div>
+ <div class="actions single-action">
+  <a class="btn btn-amber" href="../kitchen/send_to_kitchen.php?order_id=<?php echo $order['id']; ?>">👨‍🍳 Send to Kitchen</a>
+</div>
   <div style="margin-top:12px;">
     <a class="btn btn-outline" href="index.php">← Back to Tables</a>
   </div>
