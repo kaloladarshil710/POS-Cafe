@@ -152,3 +152,30 @@ textarea{min-height:90px;resize:vertical;}
   </div>
 </div>
 <div class="content">
+<style>
+/* ── Pagination ── */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 0 2px;flex-wrap:wrap;gap:10px;}
+.pg-info{font-size:13px;color:var(--text2);font-weight:600;}
+.pg-btns{display:flex;gap:4px;flex-wrap:wrap;}
+.pg-btn{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;color:var(--text2);background:var(--bg);border:1px solid var(--border);transition:0.15s;}
+.pg-btn:hover{background:var(--border);color:var(--text);}
+.pg-btn.pg-active{background:var(--primary);color:white;border-color:var(--primary);}
+.pg-ellipsis{display:inline-flex;align-items:center;justify-content:center;width:28px;height:34px;color:var(--text3);font-size:13px;}
+
+/* ── Sort links ── */
+.sort-link{text-decoration:none;color:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.sort-link:hover{color:var(--primary);}
+th.th-active{background:#EEF0FA;color:var(--primary);}
+th.th-active .sort-link{color:var(--primary);}
+
+/* ── Table header bar ── */
+.table-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.table-count{font-size:12px;font-weight:700;background:var(--primary-dim);color:var(--primary);padding:4px 12px;border-radius:999px;}
+
+/* ── Extended badges ── */
+.badge-role-admin{background:rgba(249,115,22,0.1);color:var(--primary);}
+.badge-role-staff{background:rgba(59,130,246,0.1);color:#3B82F6;}
+.action-group{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.self-label{font-size:12px;color:var(--text3);font-style:italic;}
+.empty-table{text-align:center;padding:28px;color:var(--text3);font-size:14px;}
+</style>

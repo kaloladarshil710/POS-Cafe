@@ -1,22 +1,16 @@
 <?php
 session_start();
 include("../config/db.php");
-
-if ($_SESSION['user_role'] != 'admin') {
-    header("Location: ../pos/index.php");
-    exit();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header("Location: ../auth/login.php"); exit();
 }
-
-$id = (int) $_GET['id'];
-
-// prevent deleting self
-if ($id == $_SESSION['user_id']) {
-    header("Location: users.php");
-    exit();
+// CSRF check
+if (!isset($_GET['csrf']) || !isset($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], $_GET['csrf'])) {
+    die('Invalid CSRF token.');
 }
-
-mysqli_query($conn, "DELETE FROM users WHERE id=$id");
-
-header("Location: users.php");
-exit();
-?>
+$id = safe_int($_GET['id'] ?? 0);
+if ($id > 0 && $id !== intval($_SESSION['user_id'])) {
+    $s = mysqli_prepare($conn,"DELETE FROM users WHERE id=?");
+    mysqli_stmt_bind_param($s,"i",$id); mysqli_stmt_execute($s); mysqli_stmt_close($s);
+}
+header("Location: users.php"); exit();
