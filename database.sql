@@ -37,3 +37,27 @@ INSERT INTO payment_methods (method_name, is_enabled, upi_id) VALUES
 ('Cash', 'yes', NULL),
 ('Digital', 'yes', NULL),
 ('UPI', 'yes', '123@ybl.com');
+CREATE TABLE orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_number VARCHAR(50) NOT NULL,
+    table_id INT NOT NULL,
+    user_id INT NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    status ENUM('pending','sent_to_kitchen','paid','completed') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    product_name VARCHAR(120) NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE orders 
+MODIFY status ENUM('pending','to_cook','preparing','completed','paid') DEFAULT 'pending';
+ALTER TABLE order_items
+ADD COLUMN item_status ENUM('pending','prepared') DEFAULT 'pending';

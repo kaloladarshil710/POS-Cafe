@@ -34,6 +34,19 @@ $user_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total F
         From here you can add products, manage restaurant tables, configure payment methods,
         and prepare your POS system for the frontend ordering screen.
     </p>
+    <div style="margin-top:20px;">
+    <a href="../pos/index.php" style="
+        display:inline-block;
+        text-decoration:none;
+        background: linear-gradient(90deg, #2563eb, #06b6d4);
+        color:white;
+        padding:14px 20px;
+        border-radius:14px;
+        font-weight:700;
+    ">
+        🚀 Open POS Terminal
+    </a>
+</div>
 </div>
 
 <div class="panel">
