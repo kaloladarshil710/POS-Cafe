@@ -1,9 +1,34 @@
 <?php
 include("../config/db.php");
-include("layout/header.php");
 
 $message = "";
 $error = "";
+
+/* -----------------------------
+   DELETE PAYMENT METHOD
+------------------------------*/
+if (isset($_GET['delete'])) {
+    $id = (int)$_GET['delete'];
+    mysqli_query($conn, "DELETE FROM payment_methods WHERE id=$id");
+    header("Location: payments.php?deleted=1");
+    exit();
+}
+
+/* -----------------------------
+   TOGGLE ENABLE / DISABLE
+------------------------------*/
+if (isset($_GET['toggle'])) {
+    $id = (int)$_GET['toggle'];
+
+    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT is_enabled FROM payment_methods WHERE id=$id"));
+    if ($row) {
+        $new_status = ($row['is_enabled'] === 'yes') ? 'no' : 'yes';
+        mysqli_query($conn, "UPDATE payment_methods SET is_enabled='$new_status' WHERE id=$id");
+    }
+
+    header("Location: payments.php?toggled=1");
+    exit();
+}
 
 /* -----------------------------
    ADD PAYMENT METHOD
@@ -50,32 +75,6 @@ if (isset($_POST['update_method'])) {
 }
 
 /* -----------------------------
-   DELETE PAYMENT METHOD
-------------------------------*/
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
-    mysqli_query($conn, "DELETE FROM payment_methods WHERE id=$id");
-    header("Location: payments.php?deleted=1");
-    exit();
-}
-
-/* -----------------------------
-   TOGGLE ENABLE / DISABLE
-------------------------------*/
-if (isset($_GET['toggle'])) {
-    $id = (int)$_GET['toggle'];
-
-    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT is_enabled FROM payment_methods WHERE id=$id"));
-    if ($row) {
-        $new_status = ($row['is_enabled'] === 'yes') ? 'no' : 'yes';
-        mysqli_query($conn, "UPDATE payment_methods SET is_enabled='$new_status' WHERE id=$id");
-    }
-
-    header("Location: payments.php?toggled=1");
-    exit();
-}
-
-/* -----------------------------
    EDIT FETCH
 ------------------------------*/
 $editData = null;
@@ -91,6 +90,8 @@ if (isset($_GET['edit'])) {
    FETCH ALL METHODS
 ------------------------------*/
 $methods = mysqli_query($conn, "SELECT * FROM payment_methods ORDER BY id DESC");
+
+include("layout/header.php");
 ?>
 
 <div class="panel">
