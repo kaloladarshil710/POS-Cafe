@@ -145,7 +145,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
   <div class="topbar-right">
     <a class="t-btn-nav" href="../pos/index.php">🪑 POS Terminal</a>
+    <div class="topbar-right">
+  <a class="t-btn-nav" href="../pos/index.php">🪑 POS Terminal</a>
+
+  <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
     <a class="t-btn-nav" href="../admin/dashboard.php">⚙️ Admin</a>
+  <?php endif; ?>
+</div>
   </div>
 </div>
 
