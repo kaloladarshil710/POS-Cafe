@@ -8,3 +8,32 @@ CREATE TABLE users (
     role ENUM('admin','staff') DEFAULT 'admin',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    unit VARCHAR(50) DEFAULT 'Plate',
+    tax DECIMAL(5,2) DEFAULT 0,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE restaurant_tables (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    table_number VARCHAR(20) NOT NULL,
+    seats INT NOT NULL,
+    status ENUM('free','occupied') DEFAULT 'free',
+    active ENUM('yes','no') DEFAULT 'yes',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE payment_methods (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    method_name VARCHAR(50) NOT NULL,
+    is_enabled ENUM('yes','no') DEFAULT 'yes',
+    upi_id VARCHAR(120) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO payment_methods (method_name, is_enabled, upi_id) VALUES
+('Cash', 'yes', NULL),
+('Digital', 'yes', NULL),
+('UPI', 'yes', '123@ybl.com');
