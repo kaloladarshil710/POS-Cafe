@@ -206,10 +206,11 @@ td{padding:12px 12px;border-bottom:1px solid #F2F4F7;font-size:14px;}
   <div class="modal">
     <div class="modal-title">📱 UPI Payment</div>
     <div class="modal-sub">Scan the QR code with any UPI app</div>
-    <div class="qr-container">
-      <div class="qr-icon">▩</div>
-      <div style="font-size:10px;color:#98A2B3;margin-top:6px;">QR Code</div>
-    </div>
+<div class="qr-container">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=<?php 
+    echo urlencode("upi://pay?pa=".$upi_id."&pn=POS Cafe&am=".$order['total_amount']."&cu=INR"); 
+  ?>" alt="UPI QR Code">
+</div>
     <div class="qr-upi-id"><?php echo htmlspecialchars($upi_id ?: 'UPI ID not configured'); ?></div>
     <div class="qr-amount-display">₹<?php echo number_format($order['total_amount'],2); ?></div>
     <div class="modal-note">Ask customer to open any UPI app (GPay, PhonePe, Paytm), scan QR and complete payment before tapping Confirmed.</div>
