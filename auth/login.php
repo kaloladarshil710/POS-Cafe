@@ -402,7 +402,7 @@ if (isset($_POST['login'])) {
         <div class="demo-box">
             <strong>Demo Credentials:</strong><br>
             Email: admin@poscafe.com<br>
-            Password: password (default – change after setup)
+            Password: admin123
         </div>
 
         <p class="signup-link">
