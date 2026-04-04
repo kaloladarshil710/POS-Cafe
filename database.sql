@@ -61,3 +61,12 @@ ALTER TABLE orders
 MODIFY status ENUM('pending','to_cook','preparing','completed','paid') DEFAULT 'pending';
 ALTER TABLE order_items
 ADD COLUMN item_status ENUM('pending','prepared') DEFAULT 'pending';
+
+CREATE TABLE payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status ENUM('pending','paid') DEFAULT 'paid',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

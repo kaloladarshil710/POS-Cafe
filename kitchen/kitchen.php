@@ -316,6 +316,10 @@ function renderOrderCard($conn, $order) {
                 echo "<div class='empty'>No completed orders</div>";
             }
             ?>
+            <span class="done-badge">Ready</span>
+            <a class="next-btn" href="../pos/payment.php?order_id=<?php echo $order['id']; ?>">
+    💳 Take Payment
+</a>
         </div>
     </div>
 
