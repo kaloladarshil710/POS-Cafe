@@ -21,7 +21,7 @@ if (isset($_POST['login'])) {
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];
 
-                header("Location: ../dashboard.php");
+                header("Location: ../admin/dashboard.php");
                 exit();
             } else {
                 $message = "Invalid password!";
