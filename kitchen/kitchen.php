@@ -44,6 +44,7 @@ function renderTicket($conn,$order){
     <div class="ticket-foot">
       <span class="ticket-total">₹<?php echo number_format($order['total_amount'],2); ?></span>
      <?php if($status==='completed'): ?>
+      <a class="t-btn t-btn-pay" href="../pos/payment.php?order_id=<?php echo $oid; ?>">💳 Pay</a>
   <span class="badge-ready">✅ Ready</span>
 <?php else: ?>
   <a class="t-btn t-btn-next" href="update_order_status.php?order_id=<?php echo $oid; ?>">
