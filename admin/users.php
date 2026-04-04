@@ -45,33 +45,63 @@ $users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC");
 </div>
 
 <div class="panel">
-    <h3>All Users</h3>
+    <div class="table-header">
+        <h3>All Users</h3>
+        <div class="table-count"><?php echo mysqli_num_rows($users); ?> Users</div>
+    </div>
 
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
+    <div class="table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style="min-width:170px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(mysqli_num_rows($users) > 0) { ?>
+                    <?php while($u = mysqli_fetch_assoc($users)) { ?>
+                    <tr>
+                        <td>#<?php echo $u['id']; ?></td>
+                        <td><?php echo htmlspecialchars($u['name']); ?></td>
+                        <td><?php echo htmlspecialchars($u['email']); ?></td>
+                        <td>
+                            <span class="badge <?php echo $u['role'] == 'admin' ? 'badge-role-admin' : 'badge-role-staff'; ?>">
+                                <?php echo ucfirst($u['role']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge <?php echo $u['status'] == 'active' ? 'badge-active' : 'badge-inactive'; ?>">
+                                <?php echo ucfirst($u['status']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-group">
+                                <a href="edit_user.php?id=<?php echo $u['id']; ?>" class="action-btn edit-btn">Edit</a>
 
-        <?php while($u = mysqli_fetch_assoc($users)) { ?>
-        <tr>
-            <td><?php echo $u['id']; ?></td>
-            <td><?php echo htmlspecialchars($u['name']); ?></td>
-            <td><?php echo htmlspecialchars($u['email']); ?></td>
-            <td><?php echo ucfirst($u['role']); ?></td>
-            <td><?php echo ucfirst($u['status']); ?></td>
-            <td>
-                <a href="delete_user.php?id=<?php echo $u['id']; ?>" 
-                   class="action-btn delete-btn"
-                   onclick="return confirm('Delete user?')">Delete</a>
-            </td>
-        </tr>
-        <?php } ?>
-    </table>
+                                <?php if($u['id'] != $_SESSION['user_id']) { ?>
+                                    <a href="delete_user.php?id=<?php echo $u['id']; ?>" 
+                                       class="action-btn delete-btn"
+                                       onclick="return confirm('Delete user?')">Delete</a>
+                                <?php } else { ?>
+                                    <span class="self-label">Current User</span>
+                                <?php } ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php } ?>
+                <?php } else { ?>
+                    <tr>
+                        <td colspan="6" class="empty-table">No users found.</td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <?php include("layout/footer.php"); ?>
