@@ -25,7 +25,8 @@ if (empty($order_ids) || !in_array($method, $allowed) || $table_id < 1) {
 
 // Prepare statements
 $pay_stmt = mysqli_prepare($conn, "INSERT INTO payments (order_id, payment_method, amount, status) VALUES (?,?,?,'paid')");
-$upd_stmt = mysqli_prepare($conn, "UPDATE orders SET payment_status='paid' WHERE id=?");
+// $upd_stmt = mysqli_prepare($conn, "UPDATE orders SET payment_status='paid' WHERE id=?");
+$upd_stmt = mysqli_prepare($conn, "UPDATE orders SET status='paid' WHERE id=?");
 
 foreach ($order_ids as $raw_oid) {
     $oid = intval($raw_oid);
