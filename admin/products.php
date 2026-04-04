@@ -133,7 +133,7 @@ $products = mysqli_query($conn, "
             </tr>
             <?php } ?>
         </table>
-    </div>
+    </div>  
 </div>
 
 <?php include("layout/footer.php"); ?>
