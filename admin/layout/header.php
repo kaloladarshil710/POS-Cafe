@@ -1,538 +1,154 @@
 <?php
-// ============================================================
-// Admin Layout Header
-// FIXED: Role-based access check MUST be at top, before any HTML output
-// ============================================================
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// FIXED: Auth check before any output
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../auth/login.php");
-    exit();
-}
-
-// FIXED: Role check was buried inside HTML profile-box (outputting broken HTML before redirect)
-if ($_SESSION['user_role'] !== 'admin') {
-    header("Location: ../pos/index.php");
-    exit();
-}
+if (session_status()===PHP_SESSION_NONE) session_start();
+if (!isset($_SESSION['user_id'])) { header("Location: ../auth/login.php"); exit(); }
+if ($_SESSION['user_role']!=='admin') { header("Location: ../pos/index.php"); exit(); }
 
 $current_page = basename($_SERVER['PHP_SELF']);
-$user_name = htmlspecialchars($_SESSION['user_name']);
-$user_role = htmlspecialchars(ucfirst($_SESSION['user_role']));
-
+$user_name    = htmlspecialchars($_SESSION['user_name']);
 $nav_items = [
-    ['file' => 'dashboard.php', 'icon' => '🏠', 'label' => 'Dashboard'],
-    ['file' => 'products.php',  'icon' => '🍔', 'label' => 'Products'],
-    ['file' => 'tables.php',    'icon' => '🪑', 'label' => 'Tables'],
-    ['file' => 'payments.php',  'icon' => '💳', 'label' => 'Payment Methods'],
-    ['file' => 'users.php',     'icon' => '👥', 'label' => 'Staff & Users'],
-    ['file' => 'reports.php',   'icon' => '📊', 'label' => 'Reports'],
+  ['file'=>'dashboard.php', 'icon'=>'🏠', 'label'=>'Dashboard'],
+  ['file'=>'products.php',  'icon'=>'🍔', 'label'=>'Products'],
+  ['file'=>'categories.php','icon'=>'🏷️', 'label'=>'Categories'],
+  ['file'=>'tables.php',    'icon'=>'🪑', 'label'=>'Tables'],
+  ['file'=>'payments.php',  'icon'=>'💳', 'label'=>'Payments'],
+  ['file'=>'users.php',     'icon'=>'👥', 'label'=>'Users'],
+  ['file'=>'reports.php',   'icon'=>'📊', 'label'=>'Reports'],
 ];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Cafe — Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --primary: #FF6B35;
-            --primary-dark: #E85520;
-            --sidebar-bg: #0C0C0C;
-            --sidebar-border: rgba(255,255,255,0.06);
-            --main-bg: #F4F5F7;
-            --card-bg: #FFFFFF;
-            --text-dark: #0F172A;
-            --text-muted: #64748B;
-            --border: #E2E8F0;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-        }
-
-        body {
-            font-family: 'Sora', sans-serif;
-            background: var(--main-bg);
-            color: var(--text-dark);
-        }
-
-        .wrapper { display: flex; min-height: 100vh; }
-
-        /* ─── Sidebar ─── */
-        .sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
-            color: white;
-            padding: 24px 16px;
-            position: fixed;
-            top: 0; left: 0; bottom: 0;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--sidebar-border);
-            z-index: 100;
-        }
-
-        .sidebar-logo {
-            font-size: 22px;
-            font-weight: 800;
-            color: white;
-            padding: 8px 12px 24px;
-            border-bottom: 1px solid var(--sidebar-border);
-            margin-bottom: 20px;
-        }
-
-        .sidebar-logo span { color: var(--primary); }
-
-        .profile-box {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.07);
-            padding: 14px 16px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-        }
-
-        .profile-box h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-            margin-bottom: 4px;
-        }
-
-        .profile-box p {
-            font-size: 12px;
-            color: var(--primary);
-            font-weight: 500;
-        }
-
-        .nav { flex: 1; }
-
-        .nav-section {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #444;
-            font-weight: 600;
-            padding: 0 12px;
-            margin-bottom: 8px;
-        }
-
-        .nav a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: #aaa;
-            text-decoration: none;
-            border-radius: 12px;
-            margin-bottom: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .nav a:hover {
-            background: rgba(255,255,255,0.06);
-            color: white;
-        }
-
-        .nav a.active {
-            background: var(--primary);
-            color: white;
-            font-weight: 600;
-        }
-
-        .nav a .nav-icon { font-size: 16px; }
-
-        .sidebar-footer {
-            border-top: 1px solid var(--sidebar-border);
-            padding-top: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .sidebar-footer a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: 0.2s;
-        }
-
-        .btn-pos {
-            background: rgba(255,107,53,0.15);
-            color: var(--primary);
-            border: 1px solid rgba(255,107,53,0.3);
-        }
-
-        .btn-pos:hover { background: var(--primary); color: white; }
-
-        .btn-kitchen {
-            background: rgba(245,158,11,0.12);
-            color: #F59E0B;
-            border: 1px solid rgba(245,158,11,0.25);
-        }
-
-        .btn-kitchen:hover { background: #F59E0B; color: white; }
-
-        .btn-logout {
-            background: rgba(239,68,68,0.1);
-            color: #EF4444;
-            border: 1px solid rgba(239,68,68,0.2);
-        }
-
-        .btn-logout:hover { background: #EF4444; color: white; }
-
-        /* ─── Main Area ─── */
-        .main {
-            margin-left: 260px;
-            width: calc(100% - 260px);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .topbar {
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 18px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .topbar h2 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .topbar .breadcrumb {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .topbar-right { display: flex; align-items: center; gap: 16px; }
-
-        .online-badge {
-            background: #dcfce7;
-            color: #166534;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 6px 14px;
-            border-radius: 999px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .online-badge::before {
-            content: '';
-            width: 7px;
-            height: 7px;
-            background: #22c55e;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .content { padding: 28px 32px; flex: 1; }
-
-        /* ─── Shared Components ─── */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 22px 24px;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 80px;
-            height: 80px;
-            border-radius: 0 20px 0 80px;
-            opacity: 0.08;
-        }
-
-        .stat-card.orange::after { background: var(--primary); }
-        .stat-card.green::after { background: var(--success); }
-        .stat-card.blue::after { background: #3B82F6; }
-        .stat-card.purple::after { background: #8B5CF6; }
-
-        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.08); }
-
-        .stat-icon {
-            font-size: 28px;
-            margin-bottom: 14px;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .stat-value {
-            font-size: 34px;
-            font-weight: 800;
-            color: var(--text-dark);
-        }
-
-        .panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .panel-header h3 {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-
-        input, select, textarea {
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-family: 'Sora', sans-serif;
-            font-size: 14px;
-            color: var(--text-dark);
-            background: white;
-            transition: all 0.2s ease;
-            width: 100%;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
-        }
-
-        textarea { resize: vertical; min-height: 100px; }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 22px;
-            border-radius: 12px;
-            font-family: 'Sora', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255,107,53,0.3);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-family: 'Sora', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-danger:hover { background: #DC2626; transform: translateY(-1px); }
-
-        .btn-secondary {
-            background: #F1F5F9;
-            color: var(--text-dark);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-family: 'Sora', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-secondary:hover { background: var(--border); }
-
-        .table-wrap { overflow-x: auto; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        table thead th {
-            background: #F8FAFC;
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 700;
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-        }
-
-        table tbody td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #F1F5F9;
-            color: var(--text-dark);
-        }
-
-        table tbody tr:last-child td { border-bottom: none; }
-        table tbody tr:hover { background: #F8FAFC; }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 5px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge-green { background: #DCFCE7; color: #166534; }
-        .badge-red { background: #FEE2E2; color: #991B1B; }
-        .badge-blue { background: #DBEAFE; color: #1D4ED8; }
-        .badge-gray { background: #F1F5F9; color: #475569; }
-        .badge-orange { background: #FFEDD5; color: #9A3412; }
-        .badge-yellow { background: #FEF9C3; color: #854D0E; }
-
-        .alert {
-            padding: 14px 18px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-success { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
-        .alert-error { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-
-        @media (max-width: 960px) {
-            .sidebar { width: 100%; position: relative; flex-direction: row; flex-wrap: wrap; }
-            .main { margin-left: 0; width: 100%; }
-            .wrapper { flex-direction: column; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS Cafe — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --primary:#F97316;--primary-dark:#EA6C0A;--primary-dim:rgba(249,115,22,0.1);
+  --sidebar:#0C0C14;--sidebar-border:rgba(255,255,255,0.07);
+  --bg:#F0F2F5;--surface:#FFF;--border:#E4E7EC;
+  --text:#101828;--text2:#667085;--text3:#98A2B3;
+  --success:#12B76A;--danger:#EF4444;--warning:#F59E0B;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);}
+.wrapper{display:flex;min-height:100vh;}
+
+/* sidebar */
+.sidebar{width:240px;background:var(--sidebar);color:white;padding:20px 14px;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;border-right:1px solid var(--sidebar-border);z-index:100;}
+.sidebar-logo{font-size:20px;font-weight:800;padding:8px 10px 20px;border-bottom:1px solid var(--sidebar-border);margin-bottom:18px;letter-spacing:-0.3px;}
+.sidebar-logo span{color:var(--primary);}
+
+.profile-box{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.profile-avatar{width:34px;height:34px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;}
+.profile-name{font-size:13px;font-weight:700;}
+.profile-role{font-size:11px;color:#888;margin-top:1px;}
+
+.nav-section{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#444;padding:0 10px;margin:14px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;font-size:13px;font-weight:600;color:#888;text-decoration:none;transition:0.15s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:#ddd;}
+.nav-item.active{background:var(--primary-dim);color:var(--primary);border:1px solid rgba(249,115,22,0.15);}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--sidebar-border);}
+.sidebar-footer a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;font-size:13px;font-weight:600;color:#888;text-decoration:none;transition:0.15s;}
+.sidebar-footer a:hover{background:rgba(239,68,68,0.1);color:#F87171;}
+
+/* main */
+.main-area{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.top-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.page-title{font-size:17px;font-weight:800;}
+.header-actions{display:flex;gap:8px;}
+.header-btn{text-decoration:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;border:1px solid var(--border);background:var(--bg);color:var(--text);transition:0.15s;display:flex;align-items:center;gap:6px;}
+.header-btn:hover{background:var(--border);}
+.header-btn.primary{background:var(--primary);border-color:var(--primary);color:white;}
+.header-btn.primary:hover{background:var(--primary-dark);}
+
+.content{padding:24px 28px;flex:1;}
+
+/* cards & panels */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.card h3{font-size:13px;color:var(--text2);font-weight:600;margin-bottom:6px;}
+.card p{font-size:26px;font-weight:800;color:var(--text);}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.panel h3{font-size:16px;font-weight:800;margin-bottom:16px;}
+.panel h3+p{font-size:14px;color:var(--text2);margin-bottom:16px;margin-top:-10px;}
+
+/* form elements */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid input,.form-grid select,.form-grid textarea,textarea,input[type=text],input[type=number],input[type=email],select{
+  width:100%;padding:10px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:10px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);transition:0.15s;
+}
+.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus,textarea:focus,input:focus,select:focus{
+  outline:none;border-color:var(--primary);background:white;box-shadow:0 0 0 3px rgba(249,115,22,0.1);
+}
+textarea{min-height:90px;resize:vertical;}
+
+.btn-primary{background:var(--primary);color:white;border:none;border-radius:11px;padding:10px 18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:0.15s;}
+.btn-primary:hover{background:var(--primary-dark);}
+
+/* table */
+.table-wrap{overflow-x:auto;}
+.table-wrap table{width:100%;border-collapse:collapse;}
+.table-wrap th{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);padding:11px 14px;text-align:left;border-bottom:2px solid var(--border);background:#F8FAFC;white-space:nowrap;}
+.table-wrap td{padding:12px 14px;border-bottom:1px solid #F2F4F7;font-size:14px;vertical-align:middle;}
+.table-wrap tr:last-child td{border-bottom:none;}
+.table-wrap tr:hover td{background:#FAFBFC;}
+
+.action-btn{text-decoration:none;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;transition:0.15s;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+.delete-btn{background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);}
+.delete-btn:hover{background:var(--danger);color:white;}
+.edit-btn{background:rgba(249,115,22,0.1);color:var(--primary);border:1px solid rgba(249,115,22,0.2);}
+.edit-btn:hover{background:var(--primary);color:white;}
+
+.msg-success{background:rgba(18,183,106,0.1);color:#059669;border:1px solid rgba(18,183,106,0.25);border-radius:10px;padding:11px 14px;font-size:14px;font-weight:600;margin-bottom:16px;}
+.msg-error{background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:11px 14px;font-size:14px;font-weight:600;margin-bottom:16px;}
+
+/* status badges */
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+.badge-active{background:rgba(18,183,106,0.12);color:var(--success);}
+.badge-inactive{background:rgba(239,68,68,0.1);color:var(--danger);}
+</style>
 </head>
 <body>
 <div class="wrapper">
-    <aside class="sidebar">
-        <div class="sidebar-logo">☕ POS <span>Cafe</span></div>
+<div class="sidebar">
+  <div class="sidebar-logo">POS <span>Cafe</span></div>
+  <div class="profile-box">
+    <div class="profile-avatar"><?php echo strtoupper(substr($user_name,0,1)); ?></div>
+    <div><div class="profile-name"><?php echo $user_name; ?></div><div class="profile-role">Administrator</div></div>
+  </div>
 
-        <div class="profile-box">
-            <h4><?php echo $user_name; ?></h4>
-            <p><?php echo $user_role; ?> Panel</p>
-        </div>
+  <div class="nav-section">Main Menu</div>
+  <?php foreach ($nav_items as $n): ?>
+  <a class="nav-item <?php echo $current_page===$n['file']?'active':''; ?>" href="<?php echo $n['file']; ?>">
+    <span class="nav-icon"><?php echo $n['icon']; ?></span><?php echo $n['label']; ?>
+  </a>
+  <?php endforeach; ?>
 
-        <nav class="nav">
-            <div class="nav-section">Main Menu</div>
-            <?php foreach ($nav_items as $item): ?>
-                <a href="<?php echo $item['file']; ?>"
-                   class="<?php echo ($current_page === $item['file']) ? 'active' : ''; ?>">
-                    <span class="nav-icon"><?php echo $item['icon']; ?></span>
-                    <?php echo $item['label']; ?>
-                </a>
-            <?php endforeach; ?>
-        </nav>
+  <div class="nav-section" style="margin-top:16px;">POS</div>
+  <a class="nav-item" href="../pos/index.php"><span class="nav-icon">🚀</span>POS Terminal</a>
+  <a class="nav-item" href="../kitchen/kitchen.php"><span class="nav-icon">👨‍🍳</span>Kitchen Display</a>
 
-        <div class="sidebar-footer">
-            <a href="../pos/index.php" class="btn-pos">🚀 Open POS Terminal</a>
-            <a href="../kitchen/kitchen.php" class="btn-kitchen">👨‍🍳 Kitchen Display</a>
-            <a href="../auth/logout.php" class="btn-logout">🔓 Logout</a>
-            <a href="categories.php" class="<?php echo ($current_page == 'categories.php') ? 'active' : ''; ?>">📂 Categories</a>
-        </div>
-    </aside>
+  <div class="sidebar-footer">
+    <a href="../auth/logout.php">🔓 Logout</a>
+  </div>
+</div>
 
-    <main class="main">
-        <div class="topbar">
-            <div>
-                <h2><?php echo ucfirst(str_replace(['.php','_'], ['',' '], $current_page)); ?></h2>
-                <div class="breadcrumb">POS Cafe › Admin › <?php echo ucfirst(str_replace('.php','',$current_page)); ?></div>
-            </div>
-            <div class="topbar-right">
-                <div class="online-badge">System Online</div>
-            </div>
-        </div>
-        <div class="content">
+<div class="main-area">
+<div class="top-header">
+  <div class="page-title">
+    <?php
+    $titles=['dashboard.php'=>'Dashboard','products.php'=>'Products','categories.php'=>'Categories','tables.php'=>'Tables','payments.php'=>'Payment Methods','users.php'=>'Staff & Users','reports.php'=>'Reports'];
+    echo $titles[$current_page] ?? 'Admin';
+    ?>
+  </div>
+  <div class="header-actions">
+    <a class="header-btn" href="../pos/index.php">🚀 POS Terminal</a>
+    <a class="header-btn" href="../kitchen/kitchen.php">👨‍🍳 Kitchen</a>
+  </div>
+</div>
+<div class="content">
