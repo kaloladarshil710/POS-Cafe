@@ -21,7 +21,10 @@ $nav_items = [
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POS Cafe — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -93,8 +96,11 @@ textarea{min-height:90px;resize:vertical;}
 /* table */
 .table-wrap{overflow-x:auto;}
 .table-wrap table{width:100%;border-collapse:collapse;}
-.table-wrap th{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);padding:11px 14px;text-align:left;border-bottom:2px solid var(--border);background:#F8FAFC;white-space:nowrap;}
-.table-wrap td{padding:12px 14px;border-bottom:1px solid #F2F4F7;font-size:14px;vertical-align:middle;}
+/* Bootstrap overrides for custom styling */
+.table th { font-weight: 600; }
+.btn-primary { background-color: var(--primary); border-color: var(--primary); }
+.btn-primary:hover { background-color: var(--primary-dark); border-color: var(--primary-dark); }
+.sidebar { background: linear-gradient(180deg, var(--sidebar) 0%, #1a1a2e 100%); }
 .table-wrap tr:last-child td{border-bottom:none;}
 .table-wrap tr:hover td{background:#FAFBFC;}
 
