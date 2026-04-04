@@ -47,6 +47,19 @@ $user_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total F
         🚀 Open POS Terminal
     </a>
 </div>
+<div style="margin-top:15px;">
+    <a href="../kitchen/kitchen.php" style="
+        display:inline-block;
+        text-decoration:none;
+        background: linear-gradient(90deg, #f59e0b, #ef4444);
+        color:white;
+        padding:14px 20px;
+        border-radius:14px;
+        font-weight:700;
+    ">
+        👨‍🍳 Open Kitchen Display
+    </a>
+</div>
 </div>
 
 <div class="panel">

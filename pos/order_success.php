@@ -194,11 +194,11 @@ $order_items = mysqli_query($conn, "SELECT * FROM order_items WHERE order_id = $
         <?php } ?>
     </table>
 
-    <div class="btns">
-        <a href="index.php" class="btn primary">← Back to Tables</a>
-        <a href="order.php?table_id=<?php echo $order['table_id']; ?>" class="btn secondary">Add More Items</a>
-    </div>
+ <div class="btns">
+    <a href="index.php" class="btn primary">← Back to Tables</a>
+    <a href="order.php?table_id=<?php echo $order['table_id']; ?>" class="btn secondary">Add More Items</a>
 </div>
+</div>  
 
 </body>
 </html>
