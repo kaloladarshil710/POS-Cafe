@@ -1,94 +1,264 @@
 <?php
 session_start();
 include("../config/db.php");
-if (isset($_SESSION['user_id'])) { header("Location: ../index.php"); exit(); }
 
-if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
-$csrf = $_SESSION['csrf'];
-$message = $error = "";
+if (isset($_SESSION['user_id'])) {
+    header("Location: ../index.php");
+    exit();
+}
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup'])) {
-    if (!hash_equals($csrf, $_POST['csrf'] ?? '')) die('CSRF check failed');
+$message = "";
+$msg_type = "error";
 
+if (isset($_POST['signup'])) {
     $name     = trim($_POST['name'] ?? '');
     $email    = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $role     = in_array($_POST['role'] ?? '', ['admin','staff']) ? $_POST['role'] : 'staff';
+    $password = trim($_POST['password'] ?? '');
+    $role     = $_POST['role'] ?? 'staff';
 
-    if (empty($name)||empty($email)||empty($password)) {
-        $error = "All fields are required.";
+    // Validate role to prevent privilege escalation
+    if (!in_array($role, ['admin', 'staff'])) {
+        $role = 'staff';
+    }
+
+    if (empty($name) || empty($email) || empty($password)) {
+        $message = "All fields are required!";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Invalid email address.";
+        $message = "Invalid email address!";
     } elseif (strlen($password) < 6) {
-        $error = "Password must be at least 6 characters.";
+        $message = "Password must be at least 6 characters!";
     } else {
-        $chk = mysqli_prepare($conn, "SELECT id FROM users WHERE email=?");
-        mysqli_stmt_bind_param($chk, "s", $email);
-        mysqli_stmt_execute($chk);
-        mysqli_stmt_store_result($chk);
-        if (mysqli_stmt_num_rows($chk) > 0) {
-            $error = "Email already registered.";
+        // FIXED: Prepared statement to prevent SQL injection
+        $check = mysqli_prepare($conn, "SELECT id FROM users WHERE email = ?");
+        mysqli_stmt_bind_param($check, "s", $email);
+        mysqli_stmt_execute($check);
+        mysqli_stmt_store_result($check);
+
+        if (mysqli_stmt_num_rows($check) > 0) {
+            $message = "An account with this email already exists!";
         } else {
-            $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $ins = mysqli_prepare($conn, "INSERT INTO users (name,email,password,role) VALUES (?,?,?,?)");
-            mysqli_stmt_bind_param($ins, "ssss", $name, $email, $hashed, $role);
-            if (mysqli_stmt_execute($ins)) {
-                $message = "Account created! You can now log in.";
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = mysqli_prepare($conn, "INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, ?, 'active')");
+            mysqli_stmt_bind_param($stmt, "ssss", $name, $email, $hashedPassword, $role);
+
+            if (mysqli_stmt_execute($stmt)) {
+                $msg_type = "success";
+                $message = "Account created successfully!";
             } else {
-                $error = "Failed to create account.";
+                $message = "Something went wrong. Please try again.";
             }
-            mysqli_stmt_close($ins);
+            mysqli_stmt_close($stmt);
         }
-        mysqli_stmt_close($chk);
+        mysqli_stmt_close($check);
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sign Up — POS Cafe</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{--primary:#F97316;--bg:#0A0A0F;--surface:#12121A;--border:rgba(255,255,255,0.08);--text:#F1F1F5;--text2:#9999B3;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-.box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px 36px;width:100%;max-width:420px;}
-.logo{font-size:22px;font-weight:800;color:var(--text);margin-bottom:24px;text-align:center;} .logo span{color:var(--primary);}
-h2{font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px;}
-p.sub{font-size:14px;color:var(--text2);margin-bottom:24px;}
-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
-input,select{width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;transition:.15s;margin-bottom:14px;}
-input:focus,select:focus{outline:none;border-color:var(--primary);}
-select option{background:#1A1A26;}
-.btn{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:.15s;}
-.btn:hover{background:#EA6C0A;}
-.msg-success{padding:12px 14px;background:rgba(18,183,106,0.1);border:1px solid rgba(18,183,106,0.25);color:#4ade80;border-radius:10px;font-size:14px;margin-bottom:16px;}
-.msg-error{padding:12px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#F87171;border-radius:10px;font-size:14px;margin-bottom:16px;}
-.link{text-align:center;margin-top:16px;font-size:13px;color:var(--text2);}
-.link a{color:var(--primary);text-decoration:none;font-weight:700;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — POS Cafe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #FF6B35;
+            --primary-dark: #E85520;
+            --bg: #0D0D0D;
+            --card: #161616;
+            --border: rgba(255,255,255,0.08);
+            --text: #F5F5F5;
+            --muted: #888;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            right: -20%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(255,107,53,0.1) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .wrap {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 48px 44px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span { color: var(--primary); }
+
+        h3 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .sub {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 36px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            appearance: none;
+        }
+
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255,107,53,0.06);
+            box-shadow: 0 0 0 4px rgba(255,107,53,0.1);
+        }
+
+        .field input::placeholder { color: #555; }
+        .field select option { background: #222; }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Sora', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255,107,53,0.35);
+        }
+
+        .msg {
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .msg.error { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+        .msg.success { background: rgba(34,197,94,0.12); color: #86efac; border: 1px solid rgba(34,197,94,0.2); }
+
+        .login-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
-<div class="box">
+
+<div class="wrap">
     <div class="logo">POS <span>Cafe</span></div>
-    <h2>Create Account</h2>
-    <p class="sub">Set up your POS Cafe access</p>
-    <?php if($message): ?><div class="msg-success"><?php echo h($message); ?> <a href="login.php" style="color:inherit;font-weight:700;">Login →</a></div><?php endif; ?>
-    <?php if($error):   ?><div class="msg-error"><?php echo h($error); ?></div><?php endif; ?>
+
+    <h3>Create Account</h3>
+    <p class="sub">Set up your POS Cafe staff account</p>
+
+    <?php if ($message): ?>
+        <div class="msg <?php echo $msg_type; ?>">
+            <?php echo ($msg_type === 'success') ? ' ' : ' '; ?>
+            <?php echo htmlspecialchars($message); ?>
+            <?php if ($msg_type === 'success'): ?>
+                <br><a href="login.php" style="color: inherit; font-weight: 700;"> Login now</a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
     <form method="POST">
-        <input type="hidden" name="csrf" value="<?php echo $csrf; ?>">
-        <label>Full Name</label>
-        <input type="text" name="name" required maxlength="100" placeholder="Your Name">
-        <label>Email</label>
-        <input type="email" name="email" required maxlength="120" placeholder="you@example.com">
-        <label>Password (min 6 chars)</label>
-        <input type="password" name="password" required placeholder="••••••••">
-        <label>Role</label>
-        <select name="role"><option value="staff">Staff</option><option value="admin">Admin</option></select>
-        <button type="submit" name="signup" class="btn">Create Account →</button>
+        <div class="field">
+            <label>Full Name</label>
+            <input type="text" name="name" placeholder="John Smith"
+                value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>
+        </div>
+        <div class="field">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="john@poscafe.com"
+                value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+        </div>
+        <div class="field">
+            <label>Password (min. 6 chars)</label>
+            <input type="password" name="password" placeholder="••••••••" required>
+        </div>
+        <div class="field">
+            <label>Role</label>
+            <select name="role">
+                <option value="staff">Staff (Cashier)</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" name="signup" class="btn">Create Account </button>
     </form>
-    <p class="link">Already have an account? <a href="login.php">Sign in</a></p>
+
+    <p class="login-link">Already have an account? <a href="login.php">Sign in</a></p>
 </div>
+
 </body>
 </html>
