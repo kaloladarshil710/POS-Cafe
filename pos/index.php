@@ -30,19 +30,19 @@ $server_now     = time();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POS Terminal — Floor View</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --bg:#0A0A0F; --surface:#12121A; --surface2:#1A1A26;
   --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
-  --primary:#F97316; --primary-dim:rgba(249,115,22,0.15);
+  --primary:#C8602A; --primary-dim:rgba(200,96,42,0.15);
   --green:#22C55E; --green-dim:rgba(34,197,94,0.12);
   --red:#EF4444; --red-dim:rgba(239,68,68,0.12);
   --amber:#F59E0B; --amber-dim:rgba(245,158,11,0.12);
   --text:#F1F1F5; --text2:#9999B3; --text3:#555570;
 }
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
 
 /* TOP BAR */
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);}
@@ -101,7 +101,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   overflow:hidden;
 }
 .table-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--primary-dim),transparent 70%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
-.table-card:hover{border-color:rgba(249,115,22,0.35);transform:translateY(-3px);box-shadow:0 16px 40px rgba(249,115,22,0.1);}
+.table-card:hover{border-color:rgba(200,96,42,0.35);transform:translateY(-3px);box-shadow:0 16px 40px rgba(200,96,42,0.1);}
 .table-card:hover::before{opacity:1;}
 .table-card.occupied{border-color:rgba(239,68,68,0.22);background:rgba(239,68,68,0.03);}
 .table-card.occupied::before{background:radial-gradient(circle at 50% 0%,rgba(239,68,68,0.1),transparent 70%);}
@@ -128,6 +128,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   min-height:54px;
 }
 .tc-icon{font-size:28px;line-height:1;}
+.tc-icon-svg{width:32px;height:32px;display:flex;align-items:center;justify-content:center;opacity:0.6;}
 .tc-name{font-size:14px;font-weight:700;margin-bottom:2px;}
 .tc-seats{font-size:12px;color:var(--text3);}
 
@@ -185,12 +186,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   transition:all 0.15s;
   min-height:48px;
 }
-.table-card:hover .tc-open-btn{background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.4);color:var(--primary);}
+.table-card:hover .tc-open-btn{background:rgba(200,96,42,0.15);border-color:rgba(200,96,42,0.4);color:var(--primary);}
 .table-card.occupied:hover .tc-open-btn{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:var(--red);}
 
 /* PAY button */
-.tc-pay-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,#F97316,#EA580C);border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;text-decoration:none;color:white;cursor:pointer;transition:all 0.15s;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 4px 14px rgba(249,115,22,0.35);}
-.tc-pay-btn:hover{background:linear-gradient(135deg,#EA580C,#C2410C);transform:translateY(-1px);box-shadow:0 8px 20px rgba(249,115,22,0.45);}
+.tc-pay-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,#C8602A,#EA580C);border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;text-decoration:none;color:white;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;box-shadow:0 4px 14px rgba(200,96,42,0.35);}
+.tc-pay-btn:hover{background:linear-gradient(135deg,#EA580C,#C2410C);transform:translateY(-1px);box-shadow:0 8px 20px rgba(200,96,42,0.45);}
 
 /* FREE TABLE button */
 .tc-free-btn{
@@ -208,7 +209,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   color:var(--red);
   cursor:pointer;
   transition:all 0.15s;
-  font-family:'Plus Jakarta Sans',sans-serif;
+  font-family:'DM Sans',sans-serif;
   width:100%;
   min-height:44px;
 }
@@ -246,9 +247,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .modal-sub{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6;}
 .modal-table-name{color:var(--primary);font-weight:800;}
 .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-cancel{background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:13px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;transition:0.15s;}
+.modal-cancel{background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;transition:0.15s;}
 .modal-cancel:hover{background:var(--border2);}
-.modal-confirm{background:var(--red);border:none;border-radius:12px;padding:13px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:white;cursor:pointer;transition:0.15s;text-decoration:none;display:flex;align-items:center;justify-content:center;}
+.modal-confirm{background:var(--red);border:none;border-radius:12px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:white;cursor:pointer;transition:0.15s;text-decoration:none;display:flex;align-items:center;justify-content:center;}
 .modal-confirm:hover{background:#DC2626;}
 
 @media(max-width:600px){.main,.topbar,.stats-bar{padding-left:16px;padding-right:16px;}}
@@ -259,42 +260,42 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <div class="logo">POS <span>Cafe</span></div>
+    <div class="logo" style="font-family:'DM Serif Display',serif;letter-spacing:0.2px;">POS <span>Cafe</span></div>
     <div class="divider-v"></div>
-    <div class="session-badge"><div class="session-dot"></div>Session Active</div>
+    <div class="session-badge"><div class="session-dot"></div>Live</div>
   </div>
   <div class="topbar-right">
     <a class="nav-btn" href="../kitchen/kitchen.php">
-      👨‍🍳 Kitchen
-      <?php if($kitchen_active>0): ?><span class="badge"><?php echo $kitchen_active; ?></span><?php endif; ?>
+      Kitchen
+      <?php if($kitchen_active>0): ?><span class="badge" style="background:#C8602A;"><?php echo $kitchen_active; ?></span><?php endif; ?>
     </a>
     <?php if ($_SESSION['user_role'] === 'admin'): ?>
-      <a class="icon-btn" href="../admin/dashboard.php" title="Admin Panel">⚙️</a>
+      <a class="icon-btn" href="../admin/dashboard.php" title="Admin Panel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></a>
     <?php endif; ?>
     <div class="user-chip">
       <div class="avatar"><?php echo strtoupper(substr($_SESSION['user_name'],0,1)); ?></div>
       <?php echo $user_name; ?>
     </div>
-    <a class="icon-btn logout-btn" href="../auth/logout.php" title="Logout">🔓</a>
+    <a class="icon-btn logout-btn" href="../auth/logout.php" title="Logout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
   </div>
 </div>
 
 <!-- STATS BAR -->
 <div class="stats-bar">
-  <div class="stat"><span>🟢</span><span class="stat-label">Free</span><span class="stat-val green"><?php echo $free_count; ?></span></div>
+  <div class="stat"><span class="stat-label">Free</span><span class="stat-val green"><?php echo $free_count; ?></span></div>
   <div class="stats-sep"></div>
-  <div class="stat"><span>🔴</span><span class="stat-label">Occupied</span><span class="stat-val red"><?php echo $occupied_count; ?></span></div>
+  <div class="stat"><span class="stat-label">Occupied</span><span class="stat-val red"><?php echo $occupied_count; ?></span></div>
   <div class="stats-sep"></div>
-  <div class="stat"><span>🔥</span><span class="stat-label">In Kitchen</span><span class="stat-val amber"><?php echo $kitchen_active; ?></span></div>
+  <div class="stat"><span class="stat-label">In Kitchen</span><span class="stat-val amber"><?php echo $kitchen_active; ?></span></div>
   <div class="stats-sep"></div>
-  <div class="stat"><span>💰</span><span class="stat-label">Today's Sales</span><span class="stat-val orange">₹<?php echo number_format($today_sales,2); ?></span></div>
+  <div class="stat"><span class="stat-label">Today's Sales</span><span class="stat-val orange">₹<?php echo number_format($today_sales,2); ?></span></div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
   <div class="floor-header">
     <div class="floor-title">Floor Plan</div>
-    <div class="floor-name">🏢 Ground Floor</div>
+    <div class="floor-name">Ground Floor</div>
   </div>
 
   <?php if (mysqli_num_rows($tables_q) > 0): ?>
@@ -335,10 +336,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
       <!-- Icon + name + seats -->
       <div class="tc-mid">
-        <div class="tc-icon"><?php echo $occ ? '🍽️' : '🪑'; ?></div>
+        <div class="tc-icon-svg"><?php echo $occ ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>' : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'; ?></div>
         <div>
           <div class="tc-name"><?php echo htmlspecialchars($row['table_number']); ?></div>
-          <div class="tc-seats">👥 <?php echo $row['seats']; ?> seats</div>
+          <div class="tc-seats"><?php echo $row['seats']; ?> seats</div>
         </div>
       </div>
 
@@ -362,7 +363,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- PENDING BILL TOTAL -->
         <div class="tc-amount">
           <span class="tc-amount-label">
-            💰 Pending Bill<?php if($order_count>1): ?> (<?php echo $order_count; ?> orders)<?php endif; ?>
+            Pending Bill<?php if($order_count>1): ?> (<?php echo $order_count; ?> orders)<?php endif; ?>
           </span>
           <span class="tc-amount-val">₹<?php echo number_format($pending,2); ?></span>
         </div>
@@ -371,19 +372,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- ACTIONS: Add Items | Pay | Free Table -->
         <div class="tc-actions">
           <a class="tc-open-btn" href="order.php?table_id=<?php echo $row['id']; ?>">
-            ➕ Add Items →
+            Add Items
           </a>
 
           <?php if ($pending > 0): ?>
           <a class="tc-pay-btn" href="table_bill.php?table_id=<?php echo $row['id']; ?>">
-            💳 Pay ₹<?php echo number_format($pending,2); ?>
+            Pay ₹<?php echo number_format($pending,2); ?>
           </a>
           <?php endif; ?>
 
           <!-- FREE TABLE — visible to ALL roles (admin + staff) -->
           <button class="tc-free-btn"
                   onclick="confirmFree(<?php echo $row['id']; ?>, '<?php echo addslashes($row['table_number']); ?>')">
-            🔓 Mark as Free
+            Mark as Free
           </button>
         </div>
 
@@ -392,7 +393,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- FREE TABLE: just Open -->
         <div class="tc-actions">
           <a class="tc-open-btn" href="order.php?table_id=<?php echo $row['id']; ?>">
-            🍴 Open Table →
+            Open Table
           </a>
         </div>
 
@@ -403,7 +404,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <?php else: ?>
   <div class="empty">
-    <div style="font-size:64px;margin-bottom:16px;opacity:0.4;">🪑</div>
+    <svg style="width:56px;height:56px;opacity:0.25;margin-bottom:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
     <p style="font-size:16px;font-weight:700;margin-bottom:8px;">No tables set up</p>
     <a href="../admin/tables.php" style="color:var(--primary);text-decoration:none;font-size:14px;">Configure tables in Admin →</a>
   </div>
@@ -413,15 +414,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <!-- FREE TABLE CONFIRM MODAL -->
 <div class="modal-overlay" id="freeModal">
   <div class="modal">
-    <div class="modal-icon">🔓</div>
+    <div class="modal-icon"><svg style="width:40px;height:40px;color:#C8602A;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div>
     <div class="modal-title">Mark Table as Free?</div>
     <div class="modal-sub">
       You are about to free <span class="modal-table-name" id="modalName">this table</span>.<br><br>
-      ⚠️ <strong>Ensure payment is collected before proceeding.</strong>
+       <strong>Ensure payment is collected before proceeding.</strong>
     </div>
     <div class="modal-btns">
-      <button class="modal-cancel" onclick="closeModal()">✕ Cancel</button>
-      <a class="modal-confirm" id="freeLink" href="#">🔓 Yes, Free It</a>
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <a class="modal-confirm" id="freeLink" href="#">Yes, Free Table</a>
     </div>
   </div>
 </div>
