@@ -1,266 +1,835 @@
 <?php
 session_start();
-include('../config/db.php');
+include("../config/db.php");
 
-if (!isset($_SESSION['customer_session_id'])) {
-    header('Location: scan.php');
-    exit;
+$table_id = intval($_GET['table'] ?? 0);
+
+// Validate table
+$table_q = mysqli_query($conn, "SELECT * FROM restaurant_tables WHERE id=$table_id AND active='yes'");
+$table = mysqli_fetch_assoc($table_q);
+if (!$table) {
+    die("Invalid table QR.");
 }
 
-$session_id = $_SESSION['customer_session_id'];
-$table_id = $_SESSION['table_id'];
+// Fetch products with category names
+$products = mysqli_query($conn, "
+    SELECT p.*, c.category_name
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE c.status='active'
+    ORDER BY c.category_name ASC, p.name ASC
+");
 
-// Fetch active products
-$stmt = mysqli_prepare($conn, '
-    SELECT p.*, c.name as category_name 
-    FROM products p 
-    JOIN categories c ON p.category_id = c.id 
-    WHERE p.status = "active" AND c.status = "active"
-    ORDER BY c.name, p.name
-');
-mysqli_stmt_execute($stmt);
-$products_result = mysqli_stmt_get_result($stmt);
-
-// Fetch categories for filter
-$cat_stmt = mysqli_query($conn, 'SELECT DISTINCT c.name FROM categories c JOIN products p ON p.category_id = c.id WHERE c.status = "active" ORDER BY c.name');
 $categories = [];
-while ($cat = mysqli_fetch_assoc($cat_stmt)) {
-    $categories[] = $cat['name'];
+while ($row = mysqli_fetch_assoc($products)) {
+    $cat = $row['category_name'] ?: 'Other';
+    if (!isset($categories[$cat])) $categories[$cat] = [];
+    $categories[$cat][] = $row;
 }
-?>
 
+// Emoji fallback if image missing
+$emojis = [
+    'Fast Food' => '🍔',
+    'Beverages' => '🥤',
+    'Desserts'  => '🍰',
+    'Snacks'    => '🍿',
+    'Other'     => '🍽️'
+];
+
+// Image URL base (same as POS page)
+$img_base_url = '../pos/product_images/';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu - POS Cafe</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        .product-card img { height: 200px; object-fit: cover; }
-        .floating-cart {
-            position: fixed;
-            bottom: 20px; right: 20px;
-            width: 380px; max-width: 90vw;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            z-index: 1000;
-            transform: translateY(100%); transition: all 0.3s;
-        }
-        .floating-cart.show { transform: translateY(0); }
-        .cart-item { border-bottom: 1px solid #eee; padding: 12px 0; }
-        @media (max-width: 768px) { .floating-cart { width: 95vw; right: 2.5vw; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu — <?php echo htmlspecialchars($table['table_number']); ?></title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+    --bg:#F0F2F5;
+    --surface:#FFF;
+    --surface2:#F8FAFC;
+    --border:#E4E7EC;
+    --primary:#C8602A;
+    --primary-dark:#A84E20;
+    --text:#101828;
+    --text2:#667085;
+    --text3:#98A2B3;
+    --green:#12B76A;
+    --sidebar:#050816;
+    --sidebar-border:rgba(255,255,255,0.08);
+}
+
+body{
+    font-family:'DM Sans',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+
+/* STATUS BAR */
+#orderStatusBar{
+    display:none;
+    padding:10px 20px;
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+    color:#fff;
+}
+
+/* TOPBAR */
+.topbar{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    height:58px;
+    padding:0 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-shrink:0;
+}
+.topbar-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+.brand{
+    font-size:18px;
+    font-weight:800;
+    color:var(--primary);
+}
+.table-tag{
+    background:var(--primary);
+    color:white;
+    padding:6px 12px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:800;
+}
+.topbar-right{
+    font-size:13px;
+    color:var(--text3);
+}
+
+/* MAIN LAYOUT */
+.layout{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 380px;
+    overflow:hidden;
+}
+
+/* LEFT PANEL */
+.left{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+/* CATEGORY TABS */
+.cat-tabs{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:0 16px;
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    height:56px;
+    align-items:center;
+    flex-shrink:0;
+}
+.cat-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{
+    padding:8px 16px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text2);
+    transition:0.15s ease;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+.cat-tab:hover{
+    background:var(--surface2);
+}
+.cat-tab.active{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
+}
+
+/* PRODUCT AREA */
+.products-wrap{
+    flex:1;
+    overflow-y:auto;
+    padding:18px 16px 90px;
+}
+.cat-section{
+    margin-bottom:28px;
+}
+.cat-label{
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--text3);
+    margin-bottom:14px;
+    padding-left:2px;
+}
+.product-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:16px;
+}
+
+/* PRODUCT CARD */
+.product-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:22px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:all 0.18s ease;
+    position:relative;
+}
+.product-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(0,0,0,0.08);
+    border-color:#d8dce2;
+}
+.product-card.in-cart{
+    border-color:var(--primary);
+    box-shadow:0 12px 28px rgba(200,96,42,0.12);
+}
+.in-cart-badge{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:var(--primary);
+    color:#fff;
+    font-size:10px;
+    font-weight:800;
+    padding:4px 8px;
+    border-radius:999px;
+    z-index:2;
+}
+
+/* IMAGE */
+.p-img-wrap{
+    width:100%;
+    height:160px;
+    overflow:hidden;
+    background:linear-gradient(135deg,#f5f5f0,#ece8e2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.p-img-wrap[data-cat="Beverages"]{background:linear-gradient(135deg,#e8f4fd,#c8e6f8);}
+.p-img-wrap[data-cat="Desserts"]{background:linear-gradient(135deg,#fdf0f8,#f5d5ed);}
+.p-img-wrap[data-cat="Fast Food"]{background:linear-gradient(135deg,#fdf5e8,#f5e0b5);}
+.p-img-wrap[data-cat="Snacks"]{background:linear-gradient(135deg,#f0fdf4,#c8f0d8);}
+.p-img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform 0.35s ease;
+}
+.product-card:hover .p-img{
+    transform:scale(1.06);
+}
+.p-emoji-fallback{
+    font-size:48px;
+    line-height:1;
+}
+
+/* CARD CONTENT */
+.p-body{
+    padding:14px 16px 14px;
+}
+.p-name{
+    font-size:15px;
+    font-weight:800;
+    line-height:1.3;
+    margin-bottom:5px;
+}
+.p-desc{
+    font-size:12px;
+    color:var(--text3);
+    line-height:1.5;
+    min-height:38px;
+    margin-bottom:14px;
+}
+.p-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+.p-price{
+    font-size:18px;
+    font-weight:800;
+    color:var(--primary);
+}
+.p-add{
+    width:38px;
+    height:38px;
+    border:none;
+    border-radius:12px;
+    background:var(--primary);
+    color:#fff;
+    font-size:22px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:0.15s ease;
+}
+.p-add:hover{
+    background:var(--primary-dark);
+    transform:scale(1.06);
+}
+
+/* RIGHT CART PANEL */
+.right{
+    background:var(--sidebar);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    border-left:1px solid var(--sidebar-border);
+}
+.cart-header{
+    padding:20px 18px 14px;
+    border-bottom:1px solid var(--sidebar-border);
+}
+.cart-title{
+    font-size:15px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.cart-count{
+    background:var(--primary);
+    color:#fff;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+}
+.cart-subtitle{
+    font-size:13px;
+    color:#9aa3b2;
+    margin-top:4px;
+}
+.cart-items{
+    flex:1;
+    overflow-y:auto;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.empty-cart{
+    text-align:center;
+    padding:70px 18px;
+    color:#8b93a5;
+}
+.empty-cart-icon{
+    font-size:56px;
+    margin-bottom:12px;
+    opacity:0.5;
+}
+.empty-cart p{
+    font-size:13px;
+    line-height:1.7;
+}
+
+/* CART ITEM */
+.cart-item{
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:14px;
+    padding:12px;
+}
+.ci-row1{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+}
+.ci-name{
+    font-size:13px;
+    font-weight:700;
+    line-height:1.4;
+}
+.ci-sub{
+    font-size:11px;
+    color:#9aa3b2;
+    margin-top:3px;
+}
+.ci-total{
+    font-size:14px;
+    font-weight:800;
+    color:var(--primary);
+    white-space:nowrap;
+}
+.ci-row2{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.qty-ctrl{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.qty-btn{
+    width:30px;
+    height:30px;
+    border:none;
+    border-radius:9px;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:0.12s ease;
+}
+.qb-minus{
+    background:rgba(239,68,68,0.18);
+    color:#ff8b8b;
+}
+.qb-minus:hover{
+    background:#EF4444;
+    color:#fff;
+}
+.qb-plus{
+    background:rgba(34,197,94,0.18);
+    color:#7ee7a1;
+}
+.qb-plus:hover{
+    background:#22C55E;
+    color:#fff;
+}
+.qty-num{
+    min-width:20px;
+    text-align:center;
+    font-size:14px;
+    font-weight:800;
+}
+.ci-remove{
+    background:none;
+    border:none;
+    color:#7c8597;
+    cursor:pointer;
+    font-size:15px;
+}
+.ci-remove:hover{
+    color:#ff8b8b;
+}
+
+/* CART FOOTER */
+.cart-footer{
+    padding:16px;
+    border-top:1px solid var(--sidebar-border);
+}
+.sum-line{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:#9aa3b2;
+    margin-bottom:6px;
+}
+.sum-divider{
+    border:none;
+    border-top:1px solid rgba(255,255,255,0.08);
+    margin:12px 0;
+}
+.total-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:20px;
+    font-weight:800;
+}
+.total-line span:last-child{
+    color:var(--primary);
+}
+.place-btn{
+    width:100%;
+    margin-top:16px;
+    background:var(--primary);
+    border:none;
+    color:#fff;
+    border-radius:14px;
+    padding:15px;
+    font-family:'DM Sans',sans-serif;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    transition:0.15s ease;
+}
+.place-btn:hover:not(:disabled){
+    background:var(--primary-dark);
+}
+.place-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+}
+
+/* MOBILE BAR */
+.mobile-bar{
+    display:none;
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:var(--sidebar);
+    color:#fff;
+    padding:14px 18px;
+    justify-content:space-between;
+    align-items:center;
+    z-index:100;
+    box-shadow:0 -8px 24px rgba(0,0,0,0.2);
+}
+.mobile-bar button{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:11px 18px;
+    border-radius:12px;
+    font-weight:800;
+    font-family:'DM Sans',sans-serif;
+    cursor:pointer;
+}
+
+/* RESPONSIVE */
+@media(max-width: 900px){
+    body{
+        height:auto;
+        overflow:auto;
+    }
+    .layout{
+        grid-template-columns:1fr;
+    }
+    .right{
+        display:none;
+    }
+    .products-wrap{
+        overflow:visible;
+    }
+    .mobile-bar{
+        display:flex;
+    }
+}
+</style>
 </head>
-<body class="bg-light">
-    <!-- Top Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-3" href="#">
-                <i class="bi bi-cup-hot text-primary"></i> POS Cafe
-            </a>
-            <div class="d-flex align-items-center">
-                <span class="me-3">
-                    <strong><?php echo htmlspecialchars($_SESSION['customer_name']); ?></strong><br>
-                    <small class="text-muted"><?php echo htmlspecialchars($_SESSION['mobile']); ?></small>
-                </span>
-                <button class="btn btn-outline-primary" onclick="toggleCart()">
-                    <i class="bi bi-cart"></i> Cart (<span id="cart-count">0</span>)
+<body>
+
+<!-- Live kitchen status -->
+<div id="orderStatusBar"></div>
+
+<!-- Header -->
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="brand">🍽 Cafe Menu</div>
+        <div class="table-tag"><?php echo htmlspecialchars($table['table_number']); ?></div>
+    </div>
+    <div class="topbar-right"><?php echo date('D, d M Y'); ?></div>
+</div>
+
+<div class="layout">
+    <!-- LEFT -->
+    <div class="left">
+
+        <!-- Category Tabs -->
+        <div class="cat-tabs">
+            <button class="cat-tab active" onclick="filterCat('all', this)">🍽 All</button>
+            <?php foreach ($categories as $catName => $items): ?>
+                <button class="cat-tab" onclick="filterCat('<?php echo htmlspecialchars(addslashes($catName)); ?>', this)">
+                    <?php
+                        $catEmoji = $emojis[$catName] ?? '🍽️';
+                        echo $catEmoji . ' ' . htmlspecialchars($catName);
+                    ?>
                 </button>
-                <a href="logout.php" class="btn btn-link ms-2">Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Search & Filter -->
-    <div class="container my-4">
-        <div class="row g-3 mb-4">
-            <div class="col-md-5">
-                <input type="text" class="form-control form-control-lg" id="search" placeholder="Search dishes...">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select form-select-lg" id="category-filter">
-                    <option value="">All Categories</option>
-                    <?php foreach ($categories as $cat): ?>
-                    <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <div class="input-group">
-                    <input type="range" class="form-range" id="price-filter" min="0" max="1000" value="1000">
-                    <span class="input-group-text" id="price-value">₹0 - ₹1000</span>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
 
-        <!-- Products Grid -->
-        <div class="row g-4" id="products-grid">
-            <?php while ($product = mysqli_fetch_assoc($products_result)): ?>
-            <div class="col-lg-3 col-md-4 col-sm-6 product-item" data-category="<?php echo htmlspecialchars($product['category_name']); ?>" data-price="<?php echo $product['price']; ?>">
-                <div class="card h-100 shadow-sm hover-shadow">
-                    <img src="../assets/images/<?php echo htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
-                    <div class="card-body d-flex flex-column">
-                        <h6 class="card-title fw-bold"><?php echo htmlspecialchars($product['name']); ?></h6>
-                        <p class="card-text flex-grow-1 text-muted small"><?php echo htmlspecialchars($product['description'] ?: 'Delicious ' . $product['unit']); ?></p>
-                        <div class="d-flex justify-content-between align-items-center mt-auto">
-                            <span class="h5 text-primary fw-bold">₹<?php echo number_format($product['price'], 2); ?></span>
-                            <button class="btn btn-primary btn-lg px-4" onclick="addToCart(<?php echo $product['id']; ?>, '<?php echo addslashes($product['name']); ?>', <?php echo $product['price']; ?>, '<?php echo htmlspecialchars($product['image']); ?>')">
-                                <i class="bi bi-plus-lg"></i> Add
-                            </button>
-                        </div>
+        <!-- Products -->
+        <div class="products-wrap">
+            <?php foreach ($categories as $catName => $items): ?>
+                <div class="cat-section" data-cat="<?php echo htmlspecialchars($catName); ?>">
+                    <div class="cat-label">
+                        <?php echo ($emojis[$catName] ?? '🍽️') . ' ' . htmlspecialchars($catName); ?>
+                    </div>
+
+                    <div class="product-grid">
+                        <?php foreach ($items as $item): ?>
+                            <?php
+                                $img_file = !empty($item['image']) ? trim($item['image']) : '';
+                                $img_url  = !empty($img_file) ? $img_base_url . rawurlencode($img_file) : '';
+                                $fallback = $emojis[$item['category_name'] ?? 'Other'] ?? '🍽️';
+                            ?>
+
+                            <div class="product-card" id="pcard_<?php echo $item['id']; ?>" onclick='addToCart(<?php echo json_encode([
+                                "id"    => (int)$item["id"],
+                                "name"  => $item["name"],
+                                "price" => (float)$item["price"]
+                            ]); ?>)'>
+
+                                <div class="p-img-wrap" data-cat="<?php echo htmlspecialchars($item['category_name'] ?? 'Other'); ?>">
+                                    <?php if (!empty($img_file)): ?>
+                                        <img
+                                            class="p-img"
+                                            src="<?php echo htmlspecialchars($img_url); ?>"
+                                            alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                            loading="lazy"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                        >
+                                        <span class="p-emoji-fallback" style="display:none;"><?php echo $fallback; ?></span>
+                                    <?php else: ?>
+                                        <span class="p-emoji-fallback"><?php echo $fallback; ?></span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="p-body">
+                                    <div class="p-name"><?php echo htmlspecialchars($item['name']); ?></div>
+                                    <div class="p-desc"><?php echo htmlspecialchars($item['description'] ?? 'Fresh and tasty'); ?></div>
+
+                                    <div class="p-footer">
+                                        <div class="p-price">₹<?php echo number_format($item['price'], 2); ?></div>
+                                        <button class="p-add" onclick="event.stopPropagation(); addToCart(<?php echo json_encode([
+                                            "id"    => (int)$item["id"],
+                                            "name"  => $item["name"],
+                                            "price" => (float)$item["price"]
+                                        ]); ?>)">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-            </div>
-            <?php endwhile; ?>
-        </div>
-        
-        <?php if (mysqli_num_rows($products_result) == 0): ?>
-        <div class="text-center py-5">
-            <i class="bi bi-emoji-frown display-1 text-muted mb-3"></i>
-            <h4 class="text-muted">No products available</h4>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Floating Cart -->
-    <div class="floating-cart" id="floating-cart">
-        <div class="p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Your Cart (<span id="cart-total-items">0</span>)</h5>
-                <button class="btn-close" onclick="toggleCart()"></button>
-            </div>
-            <div id="cart-items-list"></div>
-            <hr>
-            <div class="d-flex justify-content-between fs-5 fw-bold">
-                <span>Total:</span>
-                <span id="cart-total">₹0.00</span>
-            </div>
-            <button class="btn btn-success w-100 mt-3 py-3 fs-6 fw-bold" id="checkout-btn" onclick="checkout()">
-                <i class="bi bi-credit-card"></i> Proceed to Checkout
-            </button>
+            <?php endforeach; ?>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let cart = JSON.parse(localStorage.getItem('customer_cart') || '[]');
-        
-        function addToCart(id, name, price, image) {
-            const existing = cart.find(item => item.id === id);
-            if (existing) {
-                existing.quantity += 1;
-            } else {
-                cart.push({id, name, price, image, quantity: 1});
-            }
-            localStorage.setItem('customer_cart', JSON.stringify(cart));
-            updateCartUI();
-            showToast('Added to cart!', 'success');
-        }
-        
-        function updateCartUI() {
-            let totalItems = 0, totalAmount = 0;
-            cart.forEach(item => {
-                totalItems += item.quantity;
-                totalAmount += item.price * item.quantity;
-            });
-            
-            document.getElementById('cart-count').textContent = totalItems;
-            document.getElementById('cart-total-items').textContent = totalItems;
-            document.getElementById('cart-total').textContent = '₹' + totalAmount.toFixed(2);
-            document.getElementById('checkout-btn').style.display = totalItems > 0 ? 'block' : 'none';
-            
-            // Update cart items list
-            const list = document.getElementById('cart-items-list');
-            if (cart.length === 0) {
-                list.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-cart-x fs-1 mb-3"></i><p>Your cart is empty</p></div>';
-            } else {
-                list.innerHTML = cart.map(item => `
-                    <div class="cart-item d-flex">
-                        <img src="../assets/images/${item.image}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
-                        <div class="flex-grow-1 ms-3">
-                            <div class="fw-bold">${item.name}</div>
-                            <small class="text-muted">₹${item.price}/ea</small>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${item.id}, -1)">−</button>
-                            <span class="px-3 fw-bold">${item.quantity}</span>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${item.id}, 1)">+</button>
-                        </div>
+    <!-- RIGHT CART -->
+    <div class="right">
+        <div class="cart-header">
+            <div class="cart-title">🛒 Your Order <span class="cart-count" id="cartBadge">0</span></div>
+            <div class="cart-subtitle"><?php echo htmlspecialchars($table['table_number']); ?> · Live total</div>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+            <div class="empty-cart">
+                <div class="empty-cart-icon">🛒</div>
+                <p>Your cart is empty.<br>Tap any item to add it.</p>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="sum-line"><span>Items</span><span id="footerCount">0</span></div>
+            <hr class="sum-divider">
+            <div class="total-line"><span>Total</span><span id="footerTotal">₹0.00</span></div>
+            <button class="place-btn" id="placeBtn" disabled onclick="placeOrder()">🛒 Add Items to Order</button>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile cart -->
+<div class="mobile-bar">
+    <div><strong id="mobileCount">0</strong> items · ₹<strong id="mobileTotal">0.00</strong></div>
+    <button onclick="placeOrder()">Place Order →</button>
+</div>
+
+<!-- Hidden order form -->
+<form id="orderForm" method="POST" action="place_order.php">
+    <input type="hidden" name="table_id" value="<?php echo $table_id; ?>">
+    <input type="hidden" name="cart_data" id="cart_data">
+</form>
+
+<script>
+let cart = [];
+
+/* Add to cart */
+function addToCart(product) {
+    const existing = cart.find(i => i.id == product.id);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.push({...product, qty: 1});
+    }
+    renderCart();
+}
+
+/* Change qty */
+function changeQty(id, delta) {
+    const item = cart.find(i => i.id == id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) {
+        cart = cart.filter(i => i.id != id);
+    }
+    renderCart();
+}
+
+/* Remove item */
+function removeItem(id) {
+    cart = cart.filter(i => i.id != id);
+    renderCart();
+}
+
+/* Escape HTML */
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+}
+
+/* Render cart */
+function renderCart() {
+    let total = 0;
+    let count = 0;
+
+    cart.forEach(i => {
+        total += i.price * i.qty;
+        count += i.qty;
+    });
+
+    const container = document.getElementById('cartItems');
+    container.innerHTML = '';
+
+    if (cart.length === 0) {
+        container.innerHTML = `
+            <div class="empty-cart">
+                <div class="empty-cart-icon">🛒</div>
+                <p>Your cart is empty.<br>Tap any item to add it.</p>
+            </div>
+        `;
+    } else {
+        cart.forEach(item => {
+            const sub = (item.price * item.qty).toFixed(2);
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div class="ci-row1">
+                    <div>
+                        <div class="ci-name">${escHtml(item.name)}</div>
+                        <div class="ci-sub">₹${parseFloat(item.price).toFixed(2)} each</div>
                     </div>
-                `).join('');
-            }
-        }
-        
-        function changeQty(id, delta) {
-            const item = cart.find(item => item.id === id);
-            if (item) {
-                item.quantity += delta;
-                if (item.quantity <= 0) {
-                    cart = cart.filter(i => i.id !== id);
-                }
-                localStorage.setItem('customer_cart', JSON.stringify(cart));
-                updateCartUI();
-            }
-        }
-        
-        function toggleCart() {
-            const cart = document.getElementById('floating-cart');
-            cart.classList.toggle('show');
-        }
-        
-        function checkout() {
-            if (cart.length === 0) return;
-            window.location.href = 'place_order.php';
-        }
-        
-        function showToast(message, type = 'info') {
-            // Simple toast notification
-            const toast = document.createElement('div');
-            toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} position-fixed`;
-            toast.style.cssText = 'top:20px;right:20px;z-index:9999;max-width:300px;';
-            toast.innerHTML = `<i class="bi bi-check-circle"></i> ${message}`;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 3000);
-        }
-        
-        // Filters
-        document.getElementById('search').addEventListener('input', filterProducts);
-        document.getElementById('category-filter').addEventListener('change', filterProducts);
-        document.getElementById('price-filter').addEventListener('input', function() {
-            document.getElementById('price-value').textContent = '₹0 - ₹' + this.value;
-            filterProducts();
+                    <div class="ci-total">₹${sub}</div>
+                </div>
+                <div class="ci-row2">
+                    <div class="qty-ctrl">
+                        <button type="button" class="qty-btn qb-minus" onclick="changeQty(${item.id}, -1)">−</button>
+                        <span class="qty-num">${item.qty}</span>
+                        <button type="button" class="qty-btn qb-plus" onclick="changeQty(${item.id}, 1)">+</button>
+                    </div>
+                    <button type="button" class="ci-remove" onclick="removeItem(${item.id})">✕</button>
+                </div>
+            `;
+            container.appendChild(div);
         });
-        
-        function filterProducts() {
-            const search = document.getElementById('search').value.toLowerCase();
-            const category = document.getElementById('category-filter').value;
-            const maxPrice = parseInt(document.getElementById('price-filter').value);
-            
-            document.querySelectorAll('.product-item').forEach(item => {
-                const name = item.querySelector('.card-title').textContent.toLowerCase();
-                const cat = item.dataset.category.toLowerCase();
-                const price = parseFloat(item.dataset.price);
-                
-                let show = true;
-                if (search && !name.includes(search)) show = false;
-                if (category && cat !== category.toLowerCase()) show = false;
-                if (price > maxPrice) show = false;
-                
-                item.style.display = show ? '' : 'none';
-            });
+    }
+
+    // Highlight cards in cart
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.classList.remove('in-cart');
+        const badge = card.querySelector('.in-cart-badge');
+        if (badge) badge.remove();
+    });
+
+    cart.forEach(item => {
+        const card = document.getElementById('pcard_' + item.id);
+        if (card) {
+            card.classList.add('in-cart');
+            const badge = document.createElement('div');
+            badge.className = 'in-cart-badge';
+            badge.textContent = 'x' + item.qty;
+            card.appendChild(badge);
         }
-        
-        // Initialize
-        updateCartUI();
-    </script>
+    });
+
+    document.getElementById('footerCount').textContent = count;
+    document.getElementById('footerTotal').textContent = '₹' + total.toFixed(2);
+    document.getElementById('cartBadge').textContent = count;
+    document.getElementById('mobileCount').textContent = count;
+    document.getElementById('mobileTotal').textContent = total.toFixed(2);
+
+    const btn = document.getElementById('placeBtn');
+    btn.disabled = cart.length === 0;
+    btn.textContent = cart.length > 0 ? `Place Order · ₹${total.toFixed(2)} →` : '🛒 Add Items to Order';
+}
+
+/* Category filter */
+function filterCat(cat, btn) {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.cat-section').forEach(section => {
+        section.style.display = (cat === 'all' || section.dataset.cat === cat) ? '' : 'none';
+    });
+}
+
+/* Submit order */
+function placeOrder() {
+    if (cart.length === 0) {
+        alert("Please add items to your cart first.");
+        return;
+    }
+
+    document.getElementById('cart_data').value = JSON.stringify(cart);
+    document.getElementById('orderForm').submit();
+}
+
+/* Live kitchen status */
+const tableId = <?php echo $table_id; ?>;
+
+function checkOrderStatus() {
+    fetch("check_status.php?table=" + tableId)
+    .then(r => r.json())
+    .then(data => {
+        const bar = document.getElementById("orderStatusBar");
+
+        if (!data.status || data.status === "none") {
+            bar.style.display = "none";
+            return;
+        }
+
+        bar.style.display = "block";
+
+        const map = {
+            to_cook:   ["#f59e0b", "🟡 Order received. Waiting for kitchen..."],
+            preparing: ["#3b82f6", "👨‍🍳 Your food is being prepared..."],
+            completed: ["#16a34a", "✅ Your food is ready! Please proceed to payment."]
+        };
+
+        const [bg, text] = map[data.status] || ["#111827", "Checking your order..."];
+        bar.style.background = bg;
+        bar.innerHTML = text;
+    })
+    .catch(() => {});
+}
+
+setInterval(checkOrderStatus, 5000);
+checkOrderStatus();
+</script>
+
 </body>
 </html>
-
-<?php mysqli_stmt_close($stmt); ?>
-
